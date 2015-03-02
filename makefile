@@ -1,4 +1,4 @@
-SILENCE=@
+SILENCE=
 
 ### Name of output file ###
 TARGET_NAME=libMyMath
@@ -37,20 +37,18 @@ $(TARGET): $(OBJ)
 	@echo "\n${Yellow}Archiving $(notdir $@)...${NoColor}"
 	$(SILENCE)mkdir -p $(dir $@)
 	$(SILENCE)$(ARCHIVER) $(ARCHIVER_FLAGS) $(TARGET) $(OBJ)
-	@echo "${Green}...Archive created!${NoColor}\n"
+	@echo "${Green}...Archive created!${NoColor}"
 
 $(OBJ_DIR)/%.o: %.c
 	@echo "\n${Yellow}Compiling $(notdir $<)...${NoColor}"
 	$(SILENCE)mkdir -p $(dir $@)
 	$(SILENCE)$(CCOMPILER) $(CCOMPILER_FLAGS) $^ -I$(INC_DIR) -o $@
 
-makefiletest:
-	@echo $(TARGET)
-
 clean:
 	@echo "${Yellow}Cleaning archive...${NoColor}"
 	$(SILENCE)rm -rf $(OBJ_DIR) $(TARGET_DIR)
 	@echo "${Green}...Clean finished!${NoColor}"
+
 
 colortest:
 	@echo "${Blue}Blue${NC}"
@@ -89,12 +87,17 @@ White      =\033[0;37m
 NoColor    =\033[0;0m
 
 ### Documentation ###
-#ar [-]p [mod] <archive> <members ...>
-#p:
-#r  Add files into archive with replacement
+# ar [-]p [mod] <archive> <members ...>
+# p:
+# r  Add files into archive with replacement
 
-#[mod]:
-#v  Verbose mode
-#c  Create the archive if it does not already exist.
-#s  Add an index to the archive. Helps with linking. Equivalent to ranlib [?].
-#[Use nm-s to display this index]
+# [mod]:
+# v  Verbose mode
+# c  Create the archive if it does not already exist.
+# s  Add an index to the archive. Helps with linking. Equivalent to ranlib [?].
+# [Use nm-s to display this index]
+
+# Automatic variables:
+# $^  The names of all prerequisites with spaces in between them.
+# $<  The name of the first prerequisite.
+# $@  The name of the target of the rule.
