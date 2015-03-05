@@ -31,23 +31,21 @@ INCLUDE_FLAGS=$(addprefix -I,$(INC_DIRS))
 # LINKER_FLAGS+=$(addprefix -l,$(LIB_LIST))
 
 # Test code using CppUTest test harness
-ifeq ($(USE_CPPUTEST), Y)
-	#Flags for user unit tests
-	TEST_COMPILER_FLAGS=
-	TEST_INCLUDE_FLAGS=$(addprefix -I,$(TEST_INC_DIR))
-	#Link to any other libraries utilized by user tests
-	TEST_LINKER_FLAGS=$(addprefix -L,$(TEST_LIB_DIR))
-	TEST_LINKER_FLAGS+=$(addprefix -l,$(TEST_LIB_LIST))
-	#Link to production source code library is included as a prerequisite in rule for building TEST_TARGET
-	# TEST_LINKER_FLAGS+=$(addprefix -L,$(TEST_TARGET_DIR))
-	# TEST_LINKER_FLAGS+=$(addprefix -l,$(TARGET_NAME))
+#Flags for user unit tests
+TEST_COMPILER_FLAGS=
+TEST_INCLUDE_FLAGS=$(addprefix -I,$(TEST_INC_DIR))
+#Link to any other libraries utilized by user tests
+TEST_LINKER_FLAGS=$(addprefix -L,$(TEST_LIB_DIR))
+TEST_LINKER_FLAGS+=$(addprefix -l,$(TEST_LIB_LIST))
+#Link to production source code library is included as a prerequisite in rule for building TEST_TARGET
+# TEST_LINKER_FLAGS+=$(addprefix -L,$(TEST_TARGET_DIR))
+# TEST_LINKER_FLAGS+=$(addprefix -l,$(TARGET_NAME))
 
-	#Flags for CppUTest test harness source code
-	CPPUTEST_COMPILER_FLAGS=
-	CPPUTEST_INCLUDE_FLAGS+=$(addprefix -I,$(CPPUTEST_INC_DIR))
-	CPPUTEST_LINKER_FLAGS=$(addprefix -L,$(CPPUTEST_LIB_DIR))
-	CPPUTEST_LINKER_FLAGS+=$(addprefix -l,$(CPPUTEST_LIB_LIST))
-endif
+#Flags for CppUTest test harness source code
+CPPUTEST_COMPILER_FLAGS=
+CPPUTEST_INCLUDE_FLAGS+=$(addprefix -I,$(CPPUTEST_INC_DIR))
+CPPUTEST_LINKER_FLAGS=$(addprefix -L,$(CPPUTEST_LIB_DIR))
+CPPUTEST_LINKER_FLAGS+=$(addprefix -l,$(CPPUTEST_LIB_LIST))
 
 
 ### Auto-detect source code and generate object files ###
@@ -60,22 +58,20 @@ INC=$(call get_inc_from_dir_list,$(INC_DIRS))
 LIBS=$(addprefix lib,$(addsuffix .a,$(LIB_LIST)))
 
 # Test code using CppUTest test harness
-ifeq ($(USE_CPPUTEST), Y)
-	# User unit tests
-	TEST_TARGET=$(TEST_TARGET_DIR)/$(TARGET_NAME)_test
-	#Production code is compiled into a library
-	TARGET_LIB=$(TEST_TARGET_DIR)/$(addsuffix .a,$(addprefix lib,$(TARGET_NAME)))
+# User unit tests
+TEST_TARGET=$(TEST_TARGET_DIR)/$(TARGET_NAME)_test
+#Production code is compiled into a library
+TARGET_LIB=$(TEST_TARGET_DIR)/$(addsuffix .a,$(addprefix lib,$(TARGET_NAME)))
 
-	TEST_SRC=$(call get_src_from_dir_list,$(TEST_SRC_DIRS))
-	test_obj=$(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(TEST_SRC)))
-	TEST_OBJ=$(addprefix $(TEST_OBJ_DIR)/,$(test_obj))
-	TEST_INC=$(call get_inc_from_dir,$(TEST_INC_DIR))
-	TEST_LIBS=$(addprefix lib,$(addsuffix .a,$(TEST_LIB_LIST)))
+TEST_SRC=$(call get_src_from_dir_list,$(TEST_SRC_DIRS))
+test_obj=$(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(TEST_SRC)))
+TEST_OBJ=$(addprefix $(TEST_OBJ_DIR)/,$(test_obj))
+TEST_INC=$(call get_inc_from_dir,$(TEST_INC_DIR))
+TEST_LIBS=$(addprefix lib,$(addsuffix .a,$(TEST_LIB_LIST)))
 
-	# CppUTest test harness source code
-	CPPUTEST_INC=$(call get_inc_from_dir_list,$(call get_subdirs,$(CPPUTEST_INC_DIR)/))
-	CPPUTEST_LIBS=$(addprefix lib,$(addsuffix .a,$(CPPUTEST_LIB_LIST)))
-endif
+# CppUTest test harness source code
+CPPUTEST_INC=$(call get_inc_from_dir_list,$(call get_subdirs,$(CPPUTEST_INC_DIR)/))
+CPPUTEST_LIBS=$(addprefix lib,$(addsuffix .a,$(CPPUTEST_LIB_LIST)))
 
 
 ### Helper functions ###
@@ -90,7 +86,7 @@ techo=@echo "${BoldPurple}  $1:${NoColor}"; echo $2; echo;
 
 ### Makefile targets ###
 .PHONY: rebuild all check clean cleanp
-.PHONY: test
+.PHONY: rebuildt test cleant
 .PHONY: dirlist filelist flags colortest help
 
 
@@ -109,12 +105,14 @@ check: $(TARGET)
 
 $(TARGET): $(SRC_OBJ)
 	@echo "\n${Yellow}Archiving $(notdir $@)...${NoColor}"
+	@echo "${DarkGray}Production${NoColor}"
 	$(SILENCE)mkdir -p $(dir $@)
 	$(SILENCE)$(ARCHIVER) $(ARCHIVER_FLAGS) $(TARGET) $(SRC_OBJ)
 	@echo "${Green}...Archive created!\n${NoColor}"
 
 $(OBJ_DIR)/%.o: %.c
 	@echo "\n${Yellow}Compiling $(notdir $<)...${NoColor}"
+	@echo "${DarkGray}Production${NoColor}"
 	$(SILENCE)mkdir -p $(dir $@)
 	$(SILENCE)$(COMPILER) $(COMPILER_FLAGS) $^ $(INCLUDE_FLAGS) -o $@
 
@@ -122,10 +120,8 @@ clean:
 	@echo "${Yellow}Cleaning project...${NoColor}"
 	$(SILENCE)rm -rf $(TARGET_DIR)
 	$(SILENCE)rm -rf $(OBJ_DIR)
-ifdef ($(USE_CPPUTEST, Y))
 	$(SILENCE)rm -rf $(TEST_OBJ_DIR)
 	$(SILENCE)rm -rf $(TEST_TARGET_DIR)
-endif
 	@echo "${Green}...Clean finished!${NoColor}\n"
 
 cleanp:
@@ -136,43 +132,17 @@ cleanp:
 
 
 ### Test code rules ###
+rebuildt:
+	@echo "${Blue}"
+	make clean
+	@echo "${Blue}"
+	make test
+
 test: $(TEST_TARGET)
 	@echo "\n${Yellow}Executing $(notdir $<)...${NoColor}"
 	@echo
 	$(SILENCE)$(TEST_TARGET)
 	@echo "\n${Green}...Tests executed!${NoColor}\n"
-
-rebuildt:
-	make clean
-	make test
-
-# Be SURE to link the test objects before the source code library!!
-# This is what enables link-time substitution
-$(TEST_TARGET): $(TEST_OBJ) $(TARGET_LIB)
-	@echo "\n${Yellow}Linking $(notdir $@)...${NoColor}"
-	$(SILENCE)mkdir -p $(dir $@)
-#TODO add mcu flags? Probably not?
-	$(SILENCE)$(LINKER) -o $@ $^ $(LINKER_FLAGS) $(TEST_LINKER_FLAGS) $(CPPUTEST_LINKER_FLAGS)
-
-#Target source code library is placed in the test folder because the production build doesn't use it
-$(TARGET_LIB): $(SRC_OBJ)
-	@echo "\n${Yellow}Archiving all production code into $(notdir $@)... ${NoColor}"
-	$(SILENCE)mkdir -p $(dir $@)
-	$(SILENCE)$(ARCHIVER) $(ARCHIVER_FLAGS) $@ $^
-
-$(TEST_OBJ_DIR)/%.o: %.c
-	@echo "\n${Yellow}Compiling $(notdir $<)...${NoColor}"
-	$(SILENCE)mkdir -p $(dir $@)
-#TODO add mcu flags?
-	@echo "${Green}test${NoColor}"
-	$(SILENCE)$(COMPILER) $(COMPILER_FLAGS) $< -o $@ $(INCLUDE_FLAGS) $(TEST_INCLUDE_FLAGS) $(CPPUTEST_INCLUDE_FLAGS)
-
-$(TEST_OBJ_DIR)/%.o: %.cpp
-	@echo "\n${Yellow}Compiling $(notdir $<)...${NoColor}"
-	$(SILENCE)mkdir -p $(dir $@)
-#TODO add mcu flags?
-	@echo "${Green}test${NoColor}"
-	$(SILENCE)$(COMPILER) $(COMPILER_FLAGS) $< -o $@ $(INCLUDE_FLAGS) $(TEST_INCLUDE_FLAGS) $(CPPUTEST_INCLUDE_FLAGS)
 
 cleant:
 	@echo "${Yellow}Cleaning test code...${NoColor}"
@@ -180,9 +150,33 @@ cleant:
 	$(SILENCE)rm -rf $(TEST_TARGET_DIR)
 	@echo "${Green}...Clean finished!${NoColor}\n"
 
+# Be SURE to link the test objects before the source code library!!
+# This is what enables link-time substitution
+$(TEST_TARGET): $(TEST_OBJ) $(TARGET)
+	@echo "\n${Yellow}Linking $(notdir $@)...${NoColor}"
+	@echo "${DarkGray}test${NoColor}"
+	$(SILENCE)mkdir -p $(dir $@)
+	$(SILENCE)$(TEST_LINKER) -o $@ $^ $(LINKER_FLAGS) $(TEST_LINKER_FLAGS) $(CPPUTEST_LINKER_FLAGS)
+
+$(TEST_OBJ_DIR)/%.o: %.c
+	@echo "\n${Yellow}Compiling $(notdir $<)...${NoColor}"
+	$(SILENCE)mkdir -p $(dir $@)
+	@echo "${DarkGray}test${NoColor}"
+	$(SILENCE)$(TEST_COMPILER) $(COMPILER_FLAGS) $< -o $@ $(INCLUDE_FLAGS) $(TEST_INCLUDE_FLAGS) $(CPPUTEST_INCLUDE_FLAGS)
+
+$(TEST_OBJ_DIR)/%.o: %.cpp
+	@echo "\n${Yellow}Compiling $(notdir $<)...${NoColor}"
+	$(SILENCE)mkdir -p $(dir $@)
+	@echo "${DarkGray}test${NoColor}"
+	$(SILENCE)$(TEST_COMPILER) $(COMPILER_FLAGS) $< -o $@ $(INCLUDE_FLAGS) $(TEST_INCLUDE_FLAGS) $(CPPUTEST_INCLUDE_FLAGS)
+
 
 ### Targets for debugging this makefile ###
 dirlist:
+	@echo "\n${BoldCyan}Build results:"
+	$(call techo,TARGET_DIR,$(TARGET_DIR))
+	$(call techo,OBJ_DIR,$(OBJ_DIR))
+
 	@echo "${BoldCyan}Library code:${NoColor}"
 	$(call techo,SRC_DIRS,$(SRC_DIRS))
 	$(call techo,INC_DIRS,$(INC_DIRS))
@@ -191,6 +185,22 @@ dirlist:
 	$(call techo,TARGET_DIR,$(TARGET_DIR))
 	$(call techo,OBJ_DIR,$(OBJ_DIR))
 
+	@echo "\n${BoldCyan}Test code:${NoColor}"
+	$(call techo,TEST_SRC_DIRS,$(TEST_SRC_DIRS))
+	$(call techo,TEST_INC_DIR,$(TEST_INC_DIR))
+	$(call techo,TEST_LIB_DIRS,$(TEST_LIB_DIRS))
+
+	@echo "\n${BoldCyan}CppUTest code:${NoColor}"
+	$(call techo,CPPUTEST_PATH,"$(CPPUTEST_PATH)\c")
+	$(call shell_search_for_dir,$(CPPUTEST_PATH))
+	@if [ "`ls $(CPPUTEST_PATH)/.. | grep $(CPPUTEST_DIR)`" = $(CPPUTEST_DIR) ]; then \
+    echo "${Green}$(CPPUTEST_DIR) directory found!${NoColor}\n"; \
+  else\
+    echo "${Red}$(CPPUTEST_DIR) directory not found!${NoColor}\n";\
+  fi
+	$(call techo,CPPUTEST_INC_DIR,$(CPPUTEST_INC_DIR))
+	$(call techo,CPPUTEST_LIB_DIR,$(CPPUTEST_LIB_DIR))
+
 filelist:
 	$(call techo,TARGET,$(TARGET))
 	@echo "\n${BoldCyan}Library code:"
@@ -198,11 +208,36 @@ filelist:
 	$(call techo,SRC_OBJ,$(SRC_OBJ))
 	$(call techo,INC,$(INC))
 
+	@echo "\n${BoldCyan}Test code:${NoColor}"
+	$(call techo,TARGET_LIB,$(TARGET_LIB))
+	$(call techo,TEST_TARGET,$(TEST_TARGET))
+	$(call techo,TEST_SRC,$(TEST_SRC))
+	$(call techo,TEST_OBJ,$(TEST_OBJ))
+	$(call techo,TEST_INC,$(TEST_INC))
+	$(call techo,TEST_LIBS,$(TEST_LIBS))
+
+	@echo "\n${BoldCyan}CppUTest code:${NoColor}"
+# This is a very lengthy list
+	@echo "$(Yellow) Suppresed CPPUTEST_INC list due to its length.\n"
+#	$(call techo,CPPUTEST_INC,$(CPPUTEST_INC))
+	$(call techo,CPPUTEST_LIBS,$(CPPUTEST_LIBS))
+
 flags:
 	@echo "${BoldCyan}Library code${NoColor}"
 	$(call techo,COMPILER_FLAGS,$(COMPILER_FLAGS))
 	$(call techo,INCLUDE_FLAGS,$(INCLUDE_FLAGS))
 	$(call techo,ARCHIVER_FLAGS,$(ARCHIVER_FLAGS))
+
+	@echo "\n${BoldCyan}Test code${NoColor}"
+	$(call techo,TEST_COMPILER_FLAGS,$(TEST_COMPILER_FLAGS))
+	$(call techo,TEST_INCLUDE_FLAGS,$(TEST_INCLUDE_FLAGS))
+	$(call techo,ARCHIVER_FLAGS,$(ARCHIVER_FLAGS))
+	$(call techo,TEST_LINKER_FLAGS,$(TEST_LINKER_FLAGS))
+
+	@echo "\n${BoldCyan}CppUTest code${NoColor}"
+	$(call techo,CPPUTEST_COMPILER_FLAGS,$(CPPUTEST_COMPILER_FLAGS))
+	$(call techo,CPPUTEST_INCLUDE_FLAGS,$(CPPUTEST_INCLUDE_FLAGS))
+	$(call techo,CPPUTEST_LINKER_FLAGS,$(CPPUTEST_LINKER_FLAGS))
 
 help:
 	@echo "${BoldCyan}Production code options:${NoColor}"
@@ -213,7 +248,6 @@ help:
 	@echo "cleanp:\t\tClean production code only"
 	@echo
 	@echo "${BoldCyan}Test code options:${NoColor}"
-	@echo "${BoldPurple}To enable or disable test code, set USE_CPPUTEST to Y or N${NoColor}"
 	@echo "test:\t\tCompile all updated test code and run all tests"
 	@echo "rebuildt:\tClean and recompile all test code, run all tests"
 	@echo
