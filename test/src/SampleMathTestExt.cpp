@@ -1,6 +1,8 @@
 extern "C"
 {
   // #includes with C linkage
+  #include "SampleMathExt.h"
+  #include <math.h>
 }
 
 // #include with C++ linkage
@@ -17,7 +19,12 @@ TEST_GROUP(SampleMathTestExt)
   }
 };
 
-TEST(SampleMathTestExt, Wiring)
+// TEST(SampleMathTestExt, Wiring)
+// {
+//   FAIL("SampleMathTestExt wired properly!");
+// }
+
+TEST(SampleMathTestExt, Power)
 {
-  FAIL("SampleMathTestExt wired properly!");
+  LONGS_EQUAL(pow(2, 3), SampleMathExt_Power(2, 3));
 }
