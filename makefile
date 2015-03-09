@@ -9,7 +9,6 @@ TARGET_NAME=libSampleMath
 TARGET_DIR=build
 
 # Production code
-#Only supports a single directory
 SRC_DIRS=src
 INC_DIRS=inc
 #LIB_DIRS=

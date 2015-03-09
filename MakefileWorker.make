@@ -85,8 +85,8 @@ techo=@echo "${BoldPurple}  $1:${NoColor}"; echo $2; echo;
 
 
 ### Makefile targets ###
-.PHONY: rebuild all check clean cleanp
-.PHONY: rebuildt test cleant
+.PHONY: all rebuild check clean cleanp
+.PHONY: test rebuildt cleant
 .PHONY: dirlist filelist flags colortest help
 
 
@@ -114,7 +114,7 @@ $(OBJ_DIR)/%.o: %.c
 	@echo "\n${Yellow}Compiling $(notdir $<)...${NoColor}"
 	@echo "${DarkGray}Production${NoColor}"
 	$(SILENCE)mkdir -p $(dir $@)
-	$(SILENCE)$(COMPILER) $(COMPILER_FLAGS) $^ $(INCLUDE_FLAGS) -o $@
+	$(SILENCE)$(COMPILER) $(COMPILER_FLAGS) $< $(INCLUDE_FLAGS) -o $@
 
 clean:
 	@echo "${Yellow}Cleaning project...${NoColor}"
@@ -132,17 +132,17 @@ cleanp:
 
 
 ### Test code rules ###
-rebuildt:
-	@echo "${Blue}"
-	make clean
-	@echo "${Blue}"
-	make test
-
 test: $(TEST_TARGET)
 	@echo "\n${Yellow}Executing $(notdir $<)...${NoColor}"
 	@echo
 	$(SILENCE)$(TEST_TARGET)
 	@echo "\n${Green}...Tests executed!${NoColor}\n"
+
+rebuildt:
+	@echo "${Blue}"
+	make clean
+	@echo "${Blue}"
+	make test
 
 cleant:
 	@echo "${Yellow}Cleaning test code...${NoColor}"
@@ -177,13 +177,9 @@ dirlist:
 	$(call techo,TARGET_DIR,$(TARGET_DIR))
 	$(call techo,OBJ_DIR,$(OBJ_DIR))
 
-	@echo "${BoldCyan}Library code:${NoColor}"
+	@echo "\n${BoldCyan}Library code:${NoColor}"
 	$(call techo,SRC_DIRS,$(SRC_DIRS))
 	$(call techo,INC_DIRS,$(INC_DIRS))
-
-	@echo "\n${BoldCyan}Build results:"
-	$(call techo,TARGET_DIR,$(TARGET_DIR))
-	$(call techo,OBJ_DIR,$(OBJ_DIR))
 
 	@echo "\n${BoldCyan}Test code:${NoColor}"
 	$(call techo,TEST_SRC_DIRS,$(TEST_SRC_DIRS))
@@ -203,7 +199,7 @@ dirlist:
 
 filelist:
 	$(call techo,TARGET,$(TARGET))
-	@echo "\n${BoldCyan}Library code:"
+	@echo "\n${BoldCyan}Library code:${NoColor}"
 	$(call techo,SRC,$(SRC))
 	$(call techo,SRC_OBJ,$(SRC_OBJ))
 	$(call techo,INC,$(INC))
@@ -223,7 +219,7 @@ filelist:
 	$(call techo,CPPUTEST_LIBS,$(CPPUTEST_LIBS))
 
 flags:
-	@echo "${BoldCyan}Library code${NoColor}"
+	@echo "\n${BoldCyan}Library code${NoColor}"
 	$(call techo,COMPILER_FLAGS,$(COMPILER_FLAGS))
 	$(call techo,INCLUDE_FLAGS,$(INCLUDE_FLAGS))
 	$(call techo,ARCHIVER_FLAGS,$(ARCHIVER_FLAGS))
